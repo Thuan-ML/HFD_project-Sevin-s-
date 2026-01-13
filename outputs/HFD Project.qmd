@@ -1,0 +1,111 @@
+---
+title: "Quantitative Strategies on High Frequency Data Project"
+author: "Team: Sevin Tan Erdi, Thuan Tran"
+format:
+  revealjs:
+    slide-number: true
+    theme: default
+execute:
+  echo: true
+  warning: false
+  message: false
+---
+## Strategy selection
+
+- *Goal:* robust intraday trend capture with *controlled turnover*
+- *Candidates tested:*  
+  - EMA crossover (trend-following)  
+  - Bollinger bands (mean-reversion)
+- *Key observation:*
+  - High-frequency mean-reversion signals generated *excessive trading*
+  - Transaction costs dominated gross PnL in intraday data
+- *Final choice:* *EMA crossover with volatility-scaled entry/exit (hysteresis)*
+  - trades only when signals are sufficiently strong
+  - significantly reduces noise-driven trades
+
+---
+## Key design principle
+
+- The strategy is *not designed to be constantly in the market*
+- Positions are opened only when the trend signal is *strong relative to current volatility*
+- Small price fluctuations are intentionally ignored
+- This design choice:
+  - reduces signal noise
+  - lowers transaction costs
+  - improves net performance stability
+
+## Signal construction
+
+- *Trend direction:* determined by EMA(20) − EMA(240)
+  - positive spread → long bias
+  - negative spread → short bias
+
+- *Signal strength:* absolute EMA spread normalized by price
+
+- *Volatility scaling:*
+  - signal strength is compared to recent realized volatility
+  - trades are allowed only when the signal exceeds a volatility-based threshold
+
+## Parameters 
+
+- EMA fast / slow: *20 / 240*
+- Volatility window: *120* bars
+- Entry / exit multipliers: *k_enter = 10, **k_exit = 5*
+- Point value: *50 USD / point*
+- Transaction cost: *12 USD per trade*
+
+## Full Python Code
+```{python}
+#|echo: false
+#| output: false
+import runpy
+
+runpy.run_path("group1_final_strategy.py")
+```
+
+## Results
+
+```{python}
+#| echo: false
+#| out-width: 100%
+from IPython.display import Image
+Image(filename="summary_stats_g1.png")
+```
+
+```{python}
+#| echo: false
+#| out-width: 100%
+from IPython.display import Image
+Image(filename="pnl.png")
+```
+
+```{python}
+#| echo: false
+
+# import the csv file with strategy results
+import pandas as pd
+summary_data1_all_quarters = pd.read_csv("group1_summary_statistics.csv")
+
+# Format the table
+numeric_cols = summary_data1_all_quarters.select_dtypes(include=['float', 'int']).columns
+
+styled_table = (
+    summary_data1_all_quarters.style
+    .format("{:.2f}", subset=numeric_cols)   # format numbers only
+    .set_properties(**{"text-align": "right"})  
+    .set_table_styles([
+        {"selector": "th", "props": [("font-size", "20px")]},
+        {"selector": "td", "props": [("font-size", "20px")]}
+    ])
+    .hide(axis = "index")   # << hides the index
+)
+styled_table
+```
+
+## Performance Metrics
+The strategy delivers positive cumulative performance overall, with net PnL closely tracking gross PnL, indicating that transaction costs are meaningful but not performance-destroying.
+	•	Performance is highly regime-dependent:
+strong results are observed in 2023 Q1, 2024 Q2, and 2025 Q2, while sideways or choppy market conditions (e.g. 2023 Q3, 2024 Q4, 2025 Q1) lead to drawdowns.
+	•	The equity curve confirms that gains are generated primarily during persistent trend periods, consistent with the EMA(20)–EMA(240) trend-following design.
+	•	Average daily number of trades remains low (≈ 1 trade/day), validating the design choice to avoid overtrading and reduce transaction cost impact.
+	•	Risk-adjusted metrics (Sharpe and Calmar ratios) are positive in profitable quarters but deteriorate during non-trending regimes, highlighting the strategy’s dependence on volatility-adjusted trend strength.
