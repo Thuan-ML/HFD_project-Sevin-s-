@@ -1,7 +1,17 @@
 ---
-title: "HFD Project"
+title: "Quantitative Strategies on High Frequency Data Project"
+author: "Team: <Sevin Tan Erdi>, <Thuan Tran>"
+format:
+  revealjs:
+    slide-number: true
+    theme: default
+execute:
+  echo: true
+  warning: false
+  message: false
 ---
-
-## Quarto
-
-Quarto enables you to weave together content and executable code into a finished document. To learn more about Quarto see <https://quarto.org>.
+## Group 1 - Strategy Overview
+- Strategy Selection
+- Parameters
+- Key Performance Metrics
+- Summary Statistic
