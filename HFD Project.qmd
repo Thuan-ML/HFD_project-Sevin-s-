@@ -1,6 +1,6 @@
 ---
 title: "Quantitative Strategies on High Frequency Data Project"
-author: "Team: <Sevin Tan Erdi>, <Thuan Tran>"
+author: "Team: Sevin Tan Erdi, Thuan Tran"
 format:
   revealjs:
     slide-number: true
@@ -10,8 +10,46 @@ execute:
   warning: false
   message: false
 ---
-## Group 1 - Strategy Overview
-- Strategy Selection
-- Parameters
-- Key Performance Metrics
-- Summary Statistic
+## Strategy selection
+
+- *Goal:* robust intraday trend capture with *controlled turnover*
+- *Candidates tested:*  
+  - EMA crossover (trend-following)  
+  - Bollinger bands (mean-reversion)
+- *Key observation:*
+  - High-frequency mean-reversion signals generated *excessive trading*
+  - Transaction costs dominated gross PnL in intraday data
+- *Final choice:* *EMA crossover with volatility-scaled entry/exit (hysteresis)*
+  - trades only when signals are sufficiently strong
+  - significantly reduces noise-driven trades
+
+---
+## Key design principle
+
+- The strategy is *not designed to be constantly in the market*
+- Positions are opened only when the trend signal is *strong relative to current volatility*
+- Small price fluctuations are intentionally ignored
+- This design choice:
+  - reduces signal noise
+  - lowers transaction costs
+  - improves net performance stability
+
+## Signal construction
+
+- *Trend direction:* determined by EMA(20) − EMA(240)
+  - positive spread → long bias
+  - negative spread → short bias
+
+- *Signal strength:* absolute EMA spread normalized by price
+
+- *Volatility scaling:*
+  - signal strength is compared to recent realized volatility
+  - trades are allowed only when the signal exceeds a volatility-based threshold
+
+## Parameters 
+
+- EMA fast / slow: *20 / 240*
+- Volatility window: *120* bars
+- Entry / exit multipliers: *k_enter = 10, **k_exit = 5*
+- Point value: *50 USD / point*
+- Transaction cost: *12 USD per trade*
