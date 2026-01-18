@@ -1,6 +1,6 @@
 ---
 title: "Quantitative Strategies on High Frequency Data Project"
-author: "Team 6: Sevin Tan Erdi, Thuan Tran"
+author: "Team 6: Sevin Tan Erdi (474531), Thuan Tran (476708)"
 format:
   revealjs:
     slide-number: true
@@ -10,54 +10,59 @@ execute:
   warning: false
   message: false
 ---
+
 ## Strategy selection
 
-- *Goal:* robust intraday trend capture with *controlled turnover*
-- *Candidates tested:*  
-  - EMA crossover (trend-following)  
-  - Bollinger bands (mean-reversion)
-- *Key observation:*
-  - High-frequency mean-reversion signals generated *excessive trading*
-  - Transaction costs dominated gross PnL in intraday data
-- *Final choice:* *EMA crossover with volatility-scaled entry/exit (hysteresis)*
-  - trades only when signals are sufficiently strong
-  - significantly reduces noise-driven trades
+-   *Goal:* robust intraday trend capture with *controlled turnover*
+-   *Candidates tested:*
+    -   EMA crossover (trend-following)\
+    -   Bollinger bands (mean-reversion)
+-   *Key observation:*
+    -   High-frequency mean-reversion signals generated *excessive trading*
+    -   Transaction costs dominated gross PnL in intraday data
+-   *Final choice:* *EMA crossover with volatility-scaled entry/exit (hysteresis)*
+    -   trades only when signals are sufficiently strong
+    -   significantly reduces noise-driven trades
 
----
+------------------------------------------------------------------------
+
 ## Key design principle
 
-- The strategy is *not designed to be constantly in the market*
-- Positions are opened only when the trend signal is *strong relative to current volatility*
-- Small price fluctuations are intentionally ignored
-- This design choice:
-  - reduces signal noise
-  - lowers transaction costs
-  - improves net performance stability
+-   The strategy is *not designed to be constantly in the market*
+-   Positions are opened only when the trend signal is *strong relative to current volatility*
+-   Small price fluctuations are intentionally ignored
+-   This design choice:
+    -   reduces signal noise
+    -   lowers transaction costs
+    -   improves net performance stability
 
 ## Signal construction
 
-- *Trend direction:* determined by EMA(20) − EMA(240)
-  - positive spread → long bias
-  - negative spread → short bias
+-   *Trend direction:* determined by EMA(20) − EMA(240)
 
-- *Signal strength:* absolute EMA spread normalized by price
+    -   positive spread → long bias
+    -   negative spread → short bias
 
-- *Volatility scaling:*
-  - signal strength is compared to recent realized volatility
-  - trades are allowed only when the signal exceeds a volatility-based threshold
+-   *Signal strength:* absolute EMA spread normalized by price
 
-## Parameters 
+-   *Volatility scaling:*
 
-- EMA fast / slow: *20 / 240*
-- Volatility window: *120* bars
-- Entry / exit multipliers: *k_enter = 10, **k_exit = 5*
-- Point value: *50 USD / point*
-- Transaction cost: *12 USD per trade*
+    -   signal strength is compared to recent realized volatility
+    -   trades are allowed only when the signal exceeds a volatility-based threshold
 
-## Full Python Code
+## Parameters
+
+-   EMA fast / slow: *20 / 240*
+-   Volatility window: *120* bars
+-   Entry / exit multipliers: \*k_enter = 10, \*\*k_exit = 5\*
+-   Point value: *50 USD / point*
+-   Transaction cost: *12 USD per trade*
+
 ```{python}
 #|echo: false
 #| output: false
+#| results: hide
+#| eval: false
 import runpy
 
 runpy.run_path("group1_final_strategy.py")
@@ -81,7 +86,8 @@ Image(filename="pnl.png")
 
 ```{python}
 #| echo: false
-
+#| results: hide
+#| eval: false
 # import the csv file with strategy results
 import pandas as pd
 summary_data1_all_quarters = pd.read_csv("group1_summary_statistics.csv")
@@ -102,10 +108,34 @@ styled_table = (
 styled_table
 ```
 
+## Results per quarter
+
+::: {.columns}
+
+::: {.column width="50%"}
+![](equity_2023_Q1.png)
+![](equity_2023_Q3.png)
+![](equity_2023_Q4.png)
+:::
+
+::: {.column width="50%"}
+![](equity_2024_Q2.png)
+![](equity_2024_Q4.png)
+![](equity_2025_Q1.png)
+![](equity_2025_Q2.png)
+:::
+
+:::
+
+
 ## Performance Metrics
+
 The strategy delivers positive cumulative performance overall, with net PnL closely tracking gross PnL, indicating that transaction costs are meaningful but not performance-destroying.
-	•	Performance is highly regime-dependent:
-strong results are observed in 2023 Q1, 2024 Q2, and 2025 Q2, while sideways or choppy market conditions (e.g. 2023 Q3, 2024 Q4, 2025 Q1) lead to drawdowns.
-	•	The equity curve confirms that gains are generated primarily during persistent trend periods, consistent with the EMA(20)–EMA(240) trend-following design.
-	•	Average daily number of trades remains low (≈ 1 trade/day), validating the design choice to avoid overtrading and reduce transaction cost impact.
-	•	Risk-adjusted metrics (Sharpe and Calmar ratios) are positive in profitable quarters but deteriorate during non-trending regimes, highlighting the strategy’s dependence on volatility-adjusted trend strength.
+
+Performance is highly regime-dependent: strong results are observed in 2023 Q1, 2024 Q2, and 2025 Q2, while sideways or choppy market conditions (e.g. 2023 Q3, 2024 Q4, 2025 Q1) lead to drawdowns.
+
+• The equity curve confirms that gains are generated primarily during persistent trend periods, consistent with the EMA(20)–EMA(240) trend-following design.
+
+• Average daily number of trades remains low (≈ 1 trade/day), validating the design choice to avoid overtrading and reduce transaction cost impact.
+
+• Sharpe and Calmar ratios are positive in profitable quarters but deteriorate during non-trending regimes, highlighting the strategy’s dependence on volatility-adjusted trend strength.
